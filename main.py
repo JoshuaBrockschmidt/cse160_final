@@ -289,20 +289,10 @@ def main():
         display=False
     )
 
-    # Plot normalized BTC-to-USD exchange rates against U.S. dollar index.
-    list_rates3 = (dtwexb_rates, btc_rates)
+    # Plot normalized U.S. dollar index rates against the S&P 500 and Dow 30 adjusted close rates.
+    list_rates3 = (sp_rates, dow_rates, dtwexb_rates)
     plot_rates_normalized(
         list_rates3,
-        "BTC to USD against U.S. Dollar Index",
-        y_lim=(0, 1),
-        fn="btc-dtwexb-fig.png",
-        display=False
-    )
-
-    # Plot normalized U.S. dollar index rates against the S&P 500 and Dow 30 adjusted close rates.
-    list_rates4 = (sp_rates, dow_rates, dtwexb_rates)
-    plot_rates_normalized(
-        list_rates4,
         "U.S dollar against S&P 500 and Dow 30",
         y_lim=(0.7, 1),
         fn="sp-dow-dtwexb-fig.png",
