@@ -299,6 +299,17 @@ def main():
         display=False
     )
 
+    # Plot everything together.
+    # Yes, this is meant to look ugly. I found it funny, okay?
+    list_rates4 = (sp_rates, dow_rates, dtwexb_rates, btc_rates, can_to_usd, cny_to_usd, jpy_to_usd)
+    plot_rates_normalized(
+        list_rates4,
+        "Everything",
+        y_lim=(0.75, 1),
+        fn="for-the-lolz-fig.png",
+        display=False
+    )
+
     # Calculate correlation between stock indexes and currencies and the U.S. dollar index.
     currencies = (btc_rates, can_to_usd, cny_to_usd, jpy_to_usd, dtwexb_rates)
     indexes = (sp_rates, dow_rates)
