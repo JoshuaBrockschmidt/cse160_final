@@ -2,7 +2,15 @@
 
 """
 Name: Joshua Brockschmidt
-TODO
+UW NetID: 1629722
+Section: AA
+CSE 160
+Final Project
+
+Calculates correlation between Bitcoin and mainstream currencies, and market indexes (namely the
+S&P 500 and Dow 30). Normalized graphs of these exchange rates and adjusted close values are
+plotted against each other and saved as PNGs. Finally, a CSV file containing the correlation
+coefficient and the corresponding p-value between indexes and currencies is produced.
 """
 
 import csv
@@ -42,6 +50,9 @@ class Rates:
             self.dates = dates[:end]
             self._md_dates = md.datestr2num(dates)
             self.rates = rates[:end]
+            self.date_to_rate = {}
+            for i, date in enumerate(dates):
+                self.date_to_rate[date] = rates[i]
         self.label = label
 
     def load_csv(self, fn, date_col, rate_col, date_format):
@@ -66,7 +77,7 @@ class Rates:
                 try:
                     # Use a common date format.
                     date = dt.datetime.strptime(row[date_col], date_format)
-                    date = dt.date.strftime(date, "%Y%m%d")
+                    date = dt.date.strftime(date, "%Y-%m-%d")
                     rate = float(row[rate_col])
                     dates.append(date)
                     rates.append(rate)
@@ -95,14 +106,17 @@ class Rates:
         """
         Calculates the rates of change (rate per day) between each point.
 
+        NOTE: This function was used for an analysis that I decided to omit. I kept this code
+        in because there's no real reason to delete it.
+
         Returns:
             Rates object containing rates of change.
         """
         derivRates = []
         derivDates = []
         for i in range(len(self.rates) - 1):
-            date1 = dt.datetime.strptime(self.dates[i], "%Y%m%d")
-            date2 = dt.datetime.strptime(self.dates[i+1], "%Y%m%d")
+            date1 = dt.datetime.strptime(self.dates[i], "%Y-%m-%d")
+            date2 = dt.datetime.strptime(self.dates[i+1], "%Y-%m-%d")
             deltaTime = (date2 - date1).days
             if deltaTime != 0:
                 delta = self.rates[i+1] - self.rates[i]
@@ -175,8 +189,8 @@ def plot_rates(rates_list, title, y_lim=None, fn="", display=False):
         display: Boolean, whether to display graph or not.
     """
     plt.title(title)
-    plt.xlabel("Exchange rates / close rates")
-    plt.ylabel("Date")
+    plt.xlabel("Date")
+    plt.ylabel("Exchange rates / close rates")
     if not y_lim is None:
         axes = plt.gca()
         axes.set_ylim(y_lim)
@@ -214,12 +228,12 @@ def main():
     """
     # Load S&P 500 and Dow 30 adjusted close rates.
     sp_rates = Rates(
-        fn="data/^DJI.csv",
+        fn="data/^GSPC.csv",
         date_col="Date", rate_col="Adj Close", date_format="%Y-%m-%d",
         label="S&P 500"
     )
     dow_rates = Rates(
-        fn="data/^GSPC.csv",
+        fn="data/^DJI.csv",
         date_col="Date", rate_col="Adj Close", date_format="%Y-%m-%d",
         label="Dow 30"
     )
@@ -285,18 +299,24 @@ def main():
         display=False
     )
 
-    # Calculate correlation between stock indexes and currencies.
-    currencies = (btc_rates, can_to_usd, cny_to_usd, jpy_to_usd)
+    # Plot normalized U.S. dollar index rates against the S&P 500 and Dow 30 adjusted close rates.
+    list_rates4 = (sp_rates, dow_rates, dtwexb_rates)
+    plot_rates_normalized(
+        list_rates4,
+        "U.S dollar against S&P 500 and Dow 30",
+        y_lim=(0.7, 1),
+        fn="sp-dow-dtwexb-fig.png",
+        display=False
+    )
+
+    # Calculate correlation between stock indexes and currencies and the U.S. dollar index.
+    currencies = (btc_rates, can_to_usd, cny_to_usd, jpy_to_usd, dtwexb_rates)
     indexes = (sp_rates, dow_rates)
     rows = []
     for index in indexes:
         for currency in currencies:
             row = calc_correlation(index, currency)
             rows.append(row)
-
-    # Calculate correlation between U.S. Dollar Index and BTC.
-    dtwexb_row = calc_correlation(dtwexb_rates, btc_rates)
-    rows.append(dtwexb_row)
 
     # Write rows of correlation data to a CSV file.
     with open('correlations.csv', 'w') as f:
